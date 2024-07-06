@@ -6,7 +6,6 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
-	"net/url"
 
 	"github.com/gorilla/mux"
 )
@@ -47,12 +46,17 @@ func articleDetail(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func getStringValue(values url.Values, key string) string {
-	if v, ok := values[key]; ok && len(v) > 0 {
-		return v[0]
+func articleDelete(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	key := vars["Id"]
+
+	for index, article := range articles {
+		if article.Id == key {
+			articles = append(articles[:index], articles[index+1:]...)
+		}
 	}
-	return ""
 }
+
 func articleCreate(w http.ResponseWriter, r *http.Request) {
 	reqBody, _ := ioutil.ReadAll(r.Body)
 
@@ -77,17 +81,11 @@ func handleRequest() {
 	Route.HandleFunc("/articles/{Id}", articleDetail).Methods("GET")
 	Route.HandleFunc("/articles", allArticles).Methods("GET")
 	Route.HandleFunc("/articles", articleCreate).Methods("POST")
+	Route.HandleFunc("/articles", articleDelete).Methods("DELETE")
 	log.Fatal(http.ListenAndServe(":8081", Route))
 }
 
 func main() {
 	fmt.Println("Rest API versi bapak hadi - Menggunakan Mux Routers")
-
-	// newArticle := Article{Id: "545", Title: "New Test Title", Description: "New Test Description", Content: "New Test Content"}
-
-	// articles = append(articles, newArticle)
-
-	// articlesJSON, _ := json.MarshalIndent(articles, "", "  ")
-	// fmt.Println(string(articlesJSON))
 	handleRequest()
 }
